@@ -38,8 +38,8 @@ module Shipping
 				}
 				b.CustomerClassification { |b|
 					b.Code CustomerTypes[@customer_type] || '01'
-				}
 				b.PickupType { |b|
+				}
 					b.Code @pickup_type || '01'
 				}
 				b.Shipment { |b|
@@ -50,6 +50,7 @@ module Shipping
 							b.City @sender_city unless @sender_city.blank?
 							b.StateProvinceCode sender_state unless sender_state.blank?
 						}
+						b.ShipperNumber @shipper_number unless @shipper_number.blank?
 					}
 					b.ShipTo { |b|
 						b.Address { |b|
@@ -58,6 +59,14 @@ module Shipping
 							b.City @city unless @city.blank?
 							b.StateProvinceCode state unless state.blank?
 						}
+					}
+					b.ShipFrom{ |b|
+						b.Address { |b| 
+							b.PostalCode @sender_zip
+							b.CountryCode @sender_country unless @sender_country.blank?
+							b.City @sender_city unless @sender_city.blank?
+							b.StateProvinceCode sender_state unless sender_state.blank?
+						} 
 					}
 					b.Service { |b| # The service code
 						b.Code ServiceTypes[@service_type] || '03' # defaults to ground
@@ -88,10 +97,15 @@ module Shipping
 								b.MonetaryValue @insured_value
 							}
 						}
+						if @negotiated_rates
+							b.RateInformation { |b| 
+								b.NegotiatedRatesIndicator ''
+							} 
+						end
 					}
 				}
 			}
-
+						
 			get_response @ups_url + @ups_tool
 
 			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/TransportationCharges/MonetaryValue").text.to_f

@@ -16,6 +16,7 @@ module Shipping
 
 		attr_accessor :name, :phone, :company, :email, :address, :address2, :city, :state, :zip, :country
 		attr_accessor :sender_name, :sender_phone, :sender_company, :sender_email, :sender_address, :sender_city, :sender_state, :sender_zip, :sender_country
+		attr_accessor :shipper_number, :negotiated_rates
 
 		attr_accessor :weight, :weight_units, :insured_value, :declared_value, :transaction_type, :description
 		attr_accessor :measure_units, :measure_length, :measure_width, :measure_height
