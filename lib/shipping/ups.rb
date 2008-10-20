@@ -110,7 +110,7 @@ module Shipping
 
 			puts @response.to_yaml
 			#FIXME:  Fix this when we start getting the correct info back.
-			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/TransportationCharges/MonetaryValue").text.to_f if @negotiated_rates
+			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/NegotiatedRates/NetSummaryCharges/GrandTotal/MonetaryValue").text.to_f if @negotiated_rates
 			#else
 			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/TransportationCharges/MonetaryValue").text.to_f
 		rescue
