@@ -97,12 +97,12 @@ module Shipping
 								b.MonetaryValue @insured_value
 							}
 						}
-						if @negotiated_rates
-							b.RateInformation { |b| 
-								b.NegotiatedRatesIndicator
-							} 
-						end
 					}
+					if @negotiated_rates
+						b.RateInformation { |b| 
+							b.NegotiatedRatesIndicator
+						} 
+					end
 				}
 			}
 			
