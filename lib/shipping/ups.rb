@@ -38,8 +38,8 @@ module Shipping
 				}
 				b.CustomerClassification { |b|
 					b.Code CustomerTypes[@customer_type] || '01'
-				b.PickupType { |b|
 				}
+				b.PickupType { |b|
 					b.Code @pickup_type || '01'
 				}
 				b.Shipment { |b|
@@ -99,15 +99,19 @@ module Shipping
 						}
 						if @negotiated_rates
 							b.RateInformation { |b| 
-								b.NegotiatedRatesIndicator ''
+								b.NegotiatedRatesIndicator
 							} 
 						end
 					}
 				}
 			}
-						
+			
 			get_response @ups_url + @ups_tool
 
+			puts @response.to_yaml
+			#FIXME:  Fix this when we start getting the correct info back.
+			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/TransportationCharges/MonetaryValue").text.to_f if @negotiated_rates
+			#else
 			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/TransportationCharges/MonetaryValue").text.to_f
 		rescue
 			raise ShippingError, get_error
