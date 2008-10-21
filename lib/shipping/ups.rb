@@ -108,7 +108,7 @@ module Shipping
 			
 			get_response @ups_url + @ups_tool
 
-			puts @response_plain
+			#puts @response_plain
 			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/NegotiatedRates/NetSummaryCharges/GrandTotal/MonetaryValue").text.to_f if @negotiated_rates
 			#else
 			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/TransportationCharges/MonetaryValue").text.to_f
@@ -219,15 +219,15 @@ module Shipping
 			#puts @response_plain
 			
 			REXML::XPath.each(@response, '//TimeInTransitResponse/TransitResponse/ServiceSummary') { |el|
-				if el.get_elements('Service/Code')[0].text == TimeInTransitServiceType[@service_type]
+				if TimeInTransitServiceId[el.get_elements('Service/Code')[0].text] == @service_type
 					date_data = el.get_elements('EstimatedArrival/Date')[0].text.split('-')
 					new_date = Date.new(date_data[0].to_i, date_data[1].to_i, date_data[2].to_i)
 					return new_date
 				end
 		  }
 			return nil
-		rescue
-			raise ShippingError, get_error
+		#rescue
+			#raise ShippingError, get_error
 		end
 
 		# See Ship-WW-XML.pdf for API info
@@ -502,14 +502,20 @@ module Shipping
 			"2day_early" => "59"
 		}
 		
-		TimeInTransitServiceType = {
-			"next_day" => '24',
-			"2day" => '02',
-			"standard" => '25',
-			"next_day_early" => '1DM',
-			"ground_service" => 'GND',
-			"worldwide_express" => '06'
-			#Had to stop, as UPS docs repeate codes mltiple times (Example: UPS Worldwide Express is 06 and 09)
+		TimeInTransitServiceId = {
+			'1DM' => "next_day_early",	
+			'GND' => "ground_service",
+			'01' => "worldwide_express",
+			'06' => "worldwide_express",
+			'02' => "2day",
+			'03' => "standard",
+			'08' => "standard",
+			'25' => "standard",
+			'05' => "worldwide_expedited",
+			'19' => "worldwide_expedited",
+			'21' => "worldwide_express_plus",
+			'24' => "next_day",
+			'33' => "3day"
 		}
 
 		PickupTypes = {
