@@ -108,8 +108,7 @@ module Shipping
 			
 			get_response @ups_url + @ups_tool
 
-			puts @response.to_yaml
-			#FIXME:  Fix this when we start getting the correct info back.
+			puts @response_plain
 			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/NegotiatedRates/NetSummaryCharges/GrandTotal/MonetaryValue").text.to_f if @negotiated_rates
 			#else
 			return REXML::XPath.first(@response, "//RatingServiceSelectionResponse/RatedShipment/TransportationCharges/MonetaryValue").text.to_f
@@ -155,6 +154,80 @@ module Shipping
 			end
 			rescue ShippingError
 				raise ShippingError, get_error
+		end
+		
+		def time_in_transit(pickup_date=Date.today)
+			@required = [:zip, :country, :sender_zip, :sender_country, :weight]
+			@required += [:ups_license_number, :ups_user, :ups_password]
+
+			@insured_value ||= 0
+			@country ||= 'US'
+			@service_type ||= 'ground' # default to UPS ground
+			@sender_country ||= 'US'
+			@ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
+			@ups_tool = '/TimeInTransit'
+
+			state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase).upcase : @state.upcase unless @state.blank?
+			sender_state = STATES.has_value?(@sender_state.downcase) ? STATES.index(@sender_state.downcase).upcase : @sender_state.upcase unless @sender_state.blank?
+
+			# With UPS need to send two xmls
+			# First one to authenticate, second for the request
+			b = request_access
+			
+			b.instruct!
+			b.TimeInTransitRequest do |b| 
+				b.Request { |b|
+					b.TransactionReference { |b|
+						b.CustomerContext 'Time In Transit'
+						b.XpciVersion '1.0002'
+					}
+					b.RequestAction 'TimeInTransit'
+				}
+				b.TransitFrom { |b| 
+					b.AddressArtifactFormat { |b| 
+						b.PoliticalDivision2 @sender_city unless @sender_city.blank?
+						b.PoliticalDivision1 sender_state unless sender_state.blank?
+						b.PostcodePrimaryLow @sender_zip
+						b.CountryCode @sender_country unless @sender_country.blank?
+					}
+				}
+				b.TransitTo { |b| 
+					b.AddressArtifactFormat { |b| 
+						b.PoliticalDivision2 @city unless @city.blank?
+						b.PoliticalDivision1 state unless state.blank?
+						b.PostcodePrimaryLow @zip
+						b.CountryCode @country unless @country.blank?
+					}
+				}
+				b.PickupDate pickup_date.strftime("%Y%m%d")
+				b.InvoiceLineTotal { |b|  
+					b.CurrencyCode @currency_code || 'USD'
+					b.MonetaryValue @insured_value || 10
+				}
+				b.ShipmentWeight { |b|
+					b.UnitOfMeasurement { |b|
+						b.Code @weight_units || 'LBS'
+				  }
+				  b.Weight @weight
+				}
+			end
+			
+			#puts @data
+			
+			get_response @ups_url + @ups_tool
+
+			#puts @response_plain
+			
+			REXML::XPath.each(@response, '//TimeInTransitResponse/TransitResponse/ServiceSummary') { |el|
+				if el.get_elements('Service/Code')[0].text == TimeInTransitServiceType[@service_type]
+					date_data = el.get_elements('EstimatedArrival/Date')[0].text.split('-')
+					new_date = Date.new(date_data[0].to_i, date_data[1].to_i, date_data[2].to_i)
+					return new_date
+				end
+		  }
+			return nil
+		rescue
+			raise ShippingError, get_error
 		end
 
 		# See Ship-WW-XML.pdf for API info
@@ -427,6 +500,16 @@ module Shipping
 			"next_day_early" => "14",
 			"worldwide_express_plus" => "54",
 			"2day_early" => "59"
+		}
+		
+		TimeInTransitServiceType = {
+			"next_day" => '24',
+			"2day" => '02',
+			"standard" => '25',
+			"next_day_early" => '1DM',
+			"ground_service" => 'GND',
+			"worldwide_express" => '06'
+			#Had to stop, as UPS docs repeate codes mltiple times (Example: UPS Worldwide Express is 06 and 09)
 		}
 
 		PickupTypes = {
