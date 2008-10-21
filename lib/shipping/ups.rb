@@ -499,7 +499,8 @@ module Shipping
 			"next_day_saver" => "13",
 			"next_day_early" => "14",
 			"worldwide_express_plus" => "54",
-			"2day_early" => "59"
+			"2day_early" => "59",
+			"saver" => "65"
 		}
 		
 		TimeInTransitServiceId = {
