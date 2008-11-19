@@ -156,7 +156,7 @@ module Shipping
 				raise ShippingError, get_error
 		end
 		
-		def time_in_transit(pickup_date=Date.today)
+		def time_in_transit(pickup_date=Date.today, transit_service_id)
 			@required = [:zip, :country, :sender_zip, :sender_country, :weight]
 			@required += [:ups_license_number, :ups_user, :ups_password]
 
@@ -219,7 +219,7 @@ module Shipping
 			#puts @response_plain
 			
 			REXML::XPath.each(@response, '//TimeInTransitResponse/TransitResponse/ServiceSummary') { |el|
-				if TimeInTransitServiceId[el.get_elements('Service/Code')[0].text] == @service_type
+				if TimeInTransitServiceId[el.get_elements('Service/Code')[0].text] == transit_service_id.to_s
 					date_data = el.get_elements('EstimatedArrival/Date')[0].text.split('-')
 					new_date = Date.new(date_data[0].to_i, date_data[1].to_i, date_data[2].to_i)
 					return new_date
