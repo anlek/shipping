@@ -514,8 +514,10 @@ module Shipping
 			'25' => "standard",
 			'05' => "worldwide_expedited",
 			'19' => "worldwide_expedited",
+			'20' => "next_day_saver",
 			'21' => "worldwide_express_plus",
 			'24' => "next_day",
+			'28' => "saver",
 			'33' => "3day"
 		}
 
