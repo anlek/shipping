@@ -156,7 +156,7 @@ module Shipping
 				raise ShippingError, get_error
 		end
 		
-		def time_in_transit(pickup_date=Date.today, transit_service_id)
+		def time_in_transit(transit_service_id, pickup_date=Date.today)
 			@required = [:zip, :country, :sender_zip, :sender_country, :weight]
 			@required += [:ups_license_number, :ups_user, :ups_password]
 
