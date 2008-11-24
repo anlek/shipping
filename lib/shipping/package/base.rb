@@ -5,7 +5,7 @@
 module Shipping
 	module Package
 		class Base
-			attr_accessor :package_type_code, :package_type_description
+			attr_accessor :code, :description
 			attr_accessor :weight, :weight_units
 			attr_accessor :measurement_units, :length, :width, :height
 			attr_accessor :value, :currency_code
