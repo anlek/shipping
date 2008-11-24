@@ -20,7 +20,7 @@ module Shipping
 
 		attr_accessor :weight, :weight_units, :insured_value, :declared_value, :transaction_type, :description
 		attr_accessor :measure_units, :measure_length, :measure_width, :measure_height
-		attr_accessor :package_total, :packaging_type, :service_type
+		attr_accessor :package_total, :packaging_type, :service_type, :packages
 
 		attr_accessor :ship_date, :dropoff_type, :pay_type, :currency_code, :image_type, :label_type
 
@@ -29,6 +29,9 @@ module Shipping
 			YAML.load(File.open(prefs)).each {|pref, value| eval("@#{pref} = #{value.inspect}")} if File.exists?(prefs)
 
 			@required = Array.new
+			
+			#currently only used in UPS
+			@packages = []
 
 			# include all provided data
 			options.each do |method, value| 
