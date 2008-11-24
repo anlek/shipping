@@ -92,7 +92,7 @@ module Shipping
 							}
 							b.Dimensions { |b|
 								b.UnitOfMeasurement { |b|
-									b.Code package.measure_units || 'IN'
+									b.Code package.measurement_units || 'IN'
 								}
 								b.Length package.length || 0
 								b.Width package.width || 0
@@ -105,11 +105,11 @@ module Shipping
 								}
 							}
 						}
-						if @negotiated_rates
-							b.RateInformation { |b| 
-								b.NegotiatedRatesIndicator
-							} 
-						end
+					end
+					if @negotiated_rates
+						b.RateInformation { |b| 
+							b.NegotiatedRatesIndicator
+						} 
 					end
 				}
 			}
