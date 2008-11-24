@@ -10,7 +10,7 @@ module Shipping
 
 		# For current implementation (XML) docs, see http://www.ups.com/gec/techdocs/pdf/dtk_RateXML_V1.zip
 		def price
-			@required = [:zip, :country, :sender_zip, :weight]
+			@required = [:zip, :country, :sender_zip]
 			@required += [:ups_license_number, :ups_user, :ups_password]
 
 			@insured_value ||= 0
@@ -19,6 +19,12 @@ module Shipping
 			@service_type ||= 'ground' # default to UPS ground
 			@ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
 			@ups_tool = '/Rate'
+			
+			#need to build a package if there is none there
+			if(@packages.empty?)
+				raise ShippingRequiredFieldError, "The weight variable needs to be set" if @weight.nil?
+				@packages << Shipping::Package::Base.new({:weight => @weight, :value => @insured_value, :currency_code => @currency_code})
+			end
 
 			state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase).upcase : @state.upcase unless @state.blank?
 			sender_state = STATES.has_value?(@sender_state.downcase) ? STATES.index(@sender_state.downcase).upcase : @sender_state.upcase unless @sender_state.blank?
@@ -71,37 +77,39 @@ module Shipping
 					b.Service { |b| # The service code
 						b.Code ServiceTypes[@service_type] || '03' # defaults to ground
 					}
-					b.Package { |b| # Package Details					
-						b.PackagingType { |b|
-							b.Code PackageTypes[@packaging_type] || '02' # defaults to 'your packaging'
-							b.Description 'Package'
-						}
-						b.Description 'Rate Shopping'
-						b.PackageWeight { |b|
-							b.Weight @weight
-							b.UnitOfMeasurement { |b|
-								b.Code @weight_units || 'LBS' # or KGS
+					@packages.each do |package|
+						b.Package { |b| # Package Details					
+							b.PackagingType { |b|
+								b.Code PackageTypes[package.code] || '02' # defaults to 'your packaging'
+								b.Description package.description
+							}
+							b.Description 'Rate Shopping'
+							b.PackageWeight { |b|
+								b.Weight package.weight
+								b.UnitOfMeasurement { |b|
+									b.Code package.weight_units || 'LBS' # or KGS
+								}
+							}
+							b.Dimensions { |b|
+								b.UnitOfMeasurement { |b|
+									b.Code package.measure_units || 'IN'
+								}
+								b.Length package.length || 0
+								b.Width package.width || 0
+								b.Height package.height || 0
+							}
+							b.PackageServiceOptions { |b|
+								b.InsuredValue { |b|
+									b.CurrencyCode package.currency_code || 'US'
+									b.MonetaryValue package.value
+								}
 							}
 						}
-						b.Dimensions { |b|
-							b.UnitOfMeasurement { |b|
-								b.Code @measure_units || 'IN'
-							}
-							b.Length @measure_length || 0
-							b.Width @measure_width || 0
-							b.Height @measure_height || 0
-						}
-						b.PackageServiceOptions { |b|
-							b.InsuredValue { |b|
-								b.CurrencyCode @currency_code || 'US'
-								b.MonetaryValue @insured_value
-							}
-						}
-					}
-					if @negotiated_rates
-						b.RateInformation { |b| 
-							b.NegotiatedRatesIndicator
-						} 
+						if @negotiated_rates
+							b.RateInformation { |b| 
+								b.NegotiatedRatesIndicator
+							} 
+						end
 					end
 				}
 			}

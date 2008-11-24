@@ -27,38 +27,4 @@ module Shipping
 			end
 		end
 	end
-end			
-
-
-
-=begin
-
-	b.Package { |b| # Package Details					
-		b.PackagingType { |b|
-			b.Code PackageTypes[@packaging_type] || '02' # defaults to 'your packaging'
-			b.Description 'Package'
-		}
-		b.Description 'Rate Shopping'
-		b.PackageWeight { |b|
-			b.Weight @weight
-			b.UnitOfMeasurement { |b|
-				b.Code @weight_units || 'LBS' # or KGS
-			}
-		}
-		b.Dimensions { |b|
-			b.UnitOfMeasurement { |b|
-				b.Code @measure_units || 'IN'
-			}
-			b.Length @measure_length || 0
-			b.Width @measure_width || 0
-			b.Height @measure_height || 0
-		}
-		b.PackageServiceOptions { |b|
-			b.InsuredValue { |b|
-				b.CurrencyCode @currency_code || 'US'
-				b.MonetaryValue @insured_value
-			}
-		}
-	}
-
-=end
+end
